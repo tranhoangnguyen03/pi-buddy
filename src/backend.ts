@@ -115,7 +115,7 @@ export async function runAgyText(
 	onProgress?: (text: string) => void,
 	command = "agy",
 ): Promise<string> {
-	const directory = await mkdtemp(join(tmpdir(), "pi-thread-memory-"));
+	const directory = await mkdtemp(join(tmpdir(), "pi-buddy-"));
 	let progressTimer: ReturnType<typeof setTimeout> | undefined;
 	try {
 		const structured = request.kind === "index" || request.kind === "edit";
@@ -297,7 +297,7 @@ export function parseAgyModels(output: string): AgyModelFamily[] {
 }
 
 async function runAgyInfo(args: string[], signal?: AbortSignal, timeout = 30_000): Promise<string> {
-	const directory = await mkdtemp(join(tmpdir(), "pi-thread-memory-"));
+	const directory = await mkdtemp(join(tmpdir(), "pi-buddy-"));
 	try {
 		return await new Promise<string>((resolve, reject) => {
 			const child = spawn("agy", args, { cwd: directory, signal, timeout, killSignal: "SIGKILL", windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });

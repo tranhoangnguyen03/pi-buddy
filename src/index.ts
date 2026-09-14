@@ -86,17 +86,17 @@ function textResult(text: string, status: BackendStatus, options: Omit<ThreadMod
 }
 
 export default function threadMemoryExtension(pi: ExtensionAPI) {
-	const store = new JsonMemoryStore(join(getAgentDir(), "thread-memory"));
+	const store = new JsonMemoryStore(join(getAgentDir(), "buddy-memory"));
 	const mutate = createMutationQueue();
 
 	const load = (ctx: ExtensionCommandContext) => store.load(ctx.sessionManager.getSessionId());
 	const save = (state: StoredState, signal?: AbortSignal) => store.save(state, signal);
 	const stateOrEmpty = async (ctx: ExtensionCommandContext) => (await load(ctx)) ?? createEmptyState(ctx.sessionManager.getSessionId(), softwareProfile);
 	const markAgyUnavailable = (ctx: ExtensionCommandContext) => {
-		ctx.ui.setStatus("thread-memory", "Agy missing: install/sign in · /thread doctor|model|effort · Pi fallback");
+		ctx.ui.setStatus("buddy-memory", "Agy missing: install/sign in · /thread doctor|model|effort · Pi fallback");
 	};
 	const clearAgyUnavailable = (ctx: ExtensionCommandContext) => {
-		ctx.ui.setStatus("thread-memory", undefined);
+		ctx.ui.setStatus("buddy-memory", undefined);
 	};
 
 	const generate = async (ctx: ExtensionCommandContext, existing: StoredState | null, mode: "create" | "refresh" | "reset") => {

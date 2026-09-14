@@ -74,7 +74,7 @@ export async function atomicWriteFile(path: string, content: string, signal?: Ab
 
 export async function writeUniqueExport(directory: string, sessionId: string, extension: "md" | "json", content: string): Promise<string> {
 	await mkdir(directory, { recursive: true });
-	const base = `thread-memory-${sessionKey(sessionId)}`;
+	const base = `buddy-memory-${sessionKey(sessionId)}`;
 	for (let number = 1; ; number++) {
 		const path = join(directory, `${base}${number === 1 ? "" : `-${number}`}.${extension}`);
 		let handle;

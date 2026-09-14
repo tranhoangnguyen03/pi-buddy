@@ -25,7 +25,7 @@ const validState: StoredState = {
 };
 
 test("JSON store round-trips valid state atomically and rejects invalid replacement", async () => {
-	const directory = await mkdtemp(join(tmpdir(), "pi-thread-memory-"));
+	const directory = await mkdtemp(join(tmpdir(), "pi-buddy-"));
 	try {
 		const store = new JsonMemoryStore(directory);
 		await store.save(validState);
@@ -43,7 +43,7 @@ test("exports use the full session hash and never overwrite an existing export",
 	try {
 		const first = await writeUniqueExport(directory, validState.sessionId, "md", "first");
 		const second = await writeUniqueExport(directory, validState.sessionId, "md", "second");
-		assert.match(first, new RegExp(`thread-memory-${sessionKey(validState.sessionId)}\\.md$`));
+		assert.match(first, new RegExp(`buddy-memory-${sessionKey(validState.sessionId)}\\.md$`));
 		assert.notEqual(first, second);
 		assert.equal(await readFile(first, "utf8"), "first");
 		assert.equal(await readFile(second, "utf8"), "second");

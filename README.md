@@ -1,4 +1,4 @@
-# Pi Thread Memory
+# Pi Buddy
 
 An on-demand, session-local working-memory sidecar for Pi. It summarizes the current conversation lineage into a validated local document without injecting anything into Pi's main model context.
 
@@ -7,7 +7,7 @@ An on-demand, session-local working-memory sidecar for Pi. It summarizes the cur
 Requires Node.js 22.19+ and Pi 0.85.1 or a compatible release.
 
 ```bash
-pi install /absolute/path/to/pi-thread-memory
+pi install /absolute/path/to/pi-buddy
 ```
 
 For development without changing Pi configuration:
@@ -45,7 +45,7 @@ Memory-changing operations run one at a time, validate the whole returned JSON d
 
 Cancellation is honored through the final check immediately before the atomic rename. The rename is the commit boundary; once dispatched, a completed commit cannot be rolled back by a later abort.
 
-State is stored under Pi's agent directory in `thread-memory/`, keyed by a hash of the Pi session ID. It contains the profile/version, generated memory and summary, focus, captured Pi head and coverage, edit status, one-step undo state, and per-thread Agy model/effort. Older state without those settings remains readable and receives defaults only when next saved. Exports use the full session hash and an exclusive numeric suffix when needed, so an existing export is never overwritten.
+State is stored under Pi's agent directory in `buddy-memory/`, keyed by a hash of the Pi session ID. It contains the profile/version, generated memory and summary, focus, captured Pi head and coverage, edit status, one-step undo state, and per-thread Agy model/effort. Older state without those settings remains readable and receives defaults only when next saved. Exports use the full session hash and an exclusive numeric suffix when needed, so an existing export is never overwritten.
 
 ## Boundaries and limitations
 

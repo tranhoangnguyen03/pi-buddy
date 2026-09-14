@@ -68,7 +68,7 @@ test("structured output progress never exposes raw JSON while Ask and Steer stay
 });
 
 test("Agy runner consumes a fake offline stream and returns its validated final frame", async () => {
-	const directory = await mkdtemp(join(tmpdir(), "thread-memory-fake-agy-"));
+	const directory = await mkdtemp(join(tmpdir(), "buddy-memory-fake-agy-"));
 	const executable = join(directory, "fake-agy.sh");
 	try {
 		await writeFile(executable, `#!/bin/sh\nread frame\nprintf '%s\\n' '{"event":"step_update","step_update":{"step_type":"agent_response","text_delta":"hello"}}'\nprintf '%s\\n' '{"event":"result","result":{"status":"SUCCESS","response":"hello"}}'\n`, "utf8");
@@ -83,7 +83,7 @@ test("Agy runner consumes a fake offline stream and returns its validated final 
 });
 
 test("Agy cancellation terminates the subprocess group promptly", async () => {
-	const directory = await mkdtemp(join(tmpdir(), "thread-memory-slow-agy-"));
+	const directory = await mkdtemp(join(tmpdir(), "buddy-memory-slow-agy-"));
 	const executable = join(directory, "slow-agy.sh");
 	try {
 		await writeFile(executable, "#!/bin/sh\nread frame\nsleep 30\n", "utf8");
