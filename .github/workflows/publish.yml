@@ -48,7 +48,7 @@ jobs:
           printf '%s' "$PAYLOAD" | tr '_-' '/+' | base64 -d | jq '{repository, repository_owner, workflow, job_workflow_ref, ref, environment, event_name, aud}'
           code=$(curl -sS -o "$RUNNER_TEMP/exchange.json" -w '%{http-code}' -X POST \
             -H "Authorization: Bearer $OIDC" \
-            "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/@tranhoangnguyen03%2Fpi-buddy")
+            "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/pi-thread-buddy")
           echo "npm exchange HTTP $code"
           if [ "$code" != "200" ] && [ "$code" != "201" ]; then
             jq -r '.message // .error // "no message"' "$RUNNER_TEMP/exchange.json" 2>/dev/null || true
@@ -117,7 +117,7 @@ jobs:
           V: ${{ steps.v.outputs.version }}
         run: |
           set -eu
-          if npm view "@tranhoangnguyen03/pi-buddy@$V" version >/dev/null 2>&1; then
+          if npm view "pi-thread-buddy@$V" version >/dev/null 2>&1; then
             echo "npm already has $V"
             exit 0
           fi
@@ -137,7 +137,7 @@ jobs:
           fi
           found=""
           for attempt in $(seq 1 12); do
-            if npm view "@tranhoangnguyen03/pi-buddy@$V" version >/dev/null 2>&1; then found=1; break; fi
+            if npm view "pi-thread-buddy@$V" version >/dev/null 2>&1; then found=1; break; fi
             echo "npm has not served $V yet (attempt $attempt/12); waiting 5s"
             sleep 5
           done

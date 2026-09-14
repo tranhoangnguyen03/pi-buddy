@@ -3,7 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
-const PACKAGE = "@tranhoangnguyen03/pi-buddy";
+const PACKAGE = "pi-thread-buddy";
 
 const run = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8" }).trim();
 

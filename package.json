@@ -1,5 +1,5 @@
 {
-  "name": "@tranhoangnguyen03/pi-buddy",
+  "name": "pi-thread-buddy",
   "version": "0.1.0",
   "description": "On-demand, branch-aware working memory for Pi sessions",
   "type": "module",

@@ -22,7 +22,7 @@ jobs:
       - name: Compare npm and GitHub releases
         run: |
           set -eu
-          npm_latest=$(npm view @tranhoangnguyen03/pi-buddy version)
+          npm_latest=$(npm view pi-thread-buddy version)
           gh_latest=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName // empty' 2>/dev/null | sed 's/^v//')
           echo "npm=$npm_latest github=${gh_latest:-none}"
 
@@ -35,7 +35,7 @@ jobs:
             exit 0
           fi
 
-          body="npm has @tranhoangnguyen03/pi-buddy@$npm_latest but the latest GitHub release is ${gh_latest:-none}.
+          body="npm has pi-thread-buddy@$npm_latest but the latest GitHub release is ${gh_latest:-none}.
           Re-run the release workflow: Actions -> release -> Run workflow."
           existing=$(gh issue list --state open --search 'in:title "Release drift"' --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
