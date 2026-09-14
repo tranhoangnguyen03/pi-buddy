@@ -1,4 +1,4 @@
-# Pi Thread Memory — v0 contract
+# Pi Buddy — v0 contract
 
 Status: agreed product direction, consolidated for implementation.
 
