@@ -7,7 +7,7 @@ An on-demand, session-local working-memory sidecar for Pi. It summarizes the cur
 Requires Node.js 22.19+ and Pi 0.85.1 or a compatible release.
 
 ```bash
-pi install /absolute/path/to/pi-buddy
+pi install npm:pi-thread-buddy
 ```
 
 For development without changing Pi configuration:
