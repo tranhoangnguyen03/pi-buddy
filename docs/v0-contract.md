@@ -91,24 +91,34 @@ Natural-language editing receives the full memory and the user's instruction, th
 
 ## Interface
 
-### Commands
+Principle: the modal's `/`-prefixed input-bar commands are memory *content* operations; the `/thread` slash command is extension *mechanics* only. One router parses bar commands, shared by the bar itself and `/thread <text>` preload — it is never duplicated.
+
+### `/thread` (mechanics)
 
 | Command | Behavior |
 | --- | --- |
-| `/thread` | Open saved summary; create memory if absent |
-| `/thread refresh` | Consolidate prior memory with available conversation when compatible |
-| `/thread reset` | Regenerate from available conversation only, with confirmation |
-| `/thread full` | Show complete formatted memory |
-| `/thread <question>` | Ask about saved memory |
-| `/thread edit <instruction>` | Correct saved memory naturally |
-| `/thread focus [instruction]` | Show or set guidance for future refresh/reset operations |
-| `/thread export [md\|json]` | Export saved memory; default Markdown |
-| `/thread steer <intent>` | Generate a copyable prompt for Pi |
-| `/thread model [id]` | Show or set the session-local Agy model |
-| `/thread effort [default\|low\|medium\|high]` | Show or set the session-local reasoning effort (`default` is the model's fixed/built-in effort) |
+| `/thread` | Open saved memory; create it if absent |
+| `/thread <text>` | Open (creating if absent), then run `<text>` through the same bar router as a preload |
 | `/thread doctor` | Check Agy and Pi fallback readiness |
+| `/thread config` | Select menu (Model / Effort / Done) to choose the session-local Agy model or reasoning effort |
 
-Parse reserved command words deterministically; other input is a question. Do not add model-driven command routing.
+### Bar commands (content)
+
+| Command | Behavior |
+| --- | --- |
+| `<question>` (no prefix) | Ask about saved memory; the default bar mode |
+| `/edit <instruction>` | Correct saved memory naturally; one-step `/undo` |
+| `/steer <intent>` | Generate a copyable prompt for Pi; never sent or copied automatically |
+| `/focus <instruction>` | Set guidance for the next refresh/reset |
+| `/focus clear` | Clear focus |
+| `/refresh` | Consolidate prior memory with available conversation when compatible |
+| `/reset` | Regenerate from available conversation only, with confirmation |
+| `/full` | Switch to the Full tab |
+| `/export [md\|json]` | Export saved memory; default Markdown |
+| `/undo` | Undo the last memory edit once |
+| `/help` | Static Markdown: bar commands, keys, and the content-vs-mechanics distinction; points to `/thread doctor` and `/thread config` |
+
+Parse reserved bar-command words deterministically; other input is a question. Do not add model-driven command routing. Typing `/` at the start of the bar shows an inline completion hint of the available commands.
 
 Actions requiring memory should offer initial creation if none exists. Focus can be configured before creation.
 
@@ -139,7 +149,7 @@ Generate the smallest useful prompt for the stated next intent using saved memor
 
 ### Modal interaction
 
-Use one stable modal across loading, streaming, result, retry, and error. Ask and Steer stream human-readable output. Index and Edit show readable progress but never raw structured JSON. Arrows, Page Up/Down, mouse wheel, and trackpad scroll. `C` copies the displayed view with inline success/error status, `R` retries the same captured inputs and preserves the previous good result if retry fails, `L` expands the captured latest response where applicable, and `Esc` closes or aborts. Ask, Edit, Focus, Export, and Steer remain slash commands rather than modal actions.
+Use one stable modal across loading, streaming, result, retry, and error, with an input bar pinned at the bottom for the content operations. Ask and Steer stream human-readable output. Index and Edit show readable progress but never raw structured JSON. Arrows, Page Up/Down, mouse wheel, and trackpad scroll. With an empty draft, `C` copies the displayed view with inline success/error status, `R` retries the same captured bar command and preserves the previous good result if retry fails, and `L` expands the captured latest response where applicable. `Esc` clears a non-empty draft first, then closes or aborts. Ask, Edit, Focus, Export, and Steer are bar commands inside the modal, not slash commands.
 
 ## Agent contracts and naive assumptions
 

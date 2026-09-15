@@ -2,6 +2,22 @@
 
 All notable changes to pi-buddy are documented here.
 
+## [0.2.0] - 2026-09-14
+
+### Changed
+
+- Modal input bar: the Thread memory modal now pins a pi-btw-style input bar at the bottom. Default mode is Ask (type a question, press Enter, streams into the body and replaces the current result). `/`-prefixed bar commands cover the rest of memory content: `/edit`, `/steer`, `/focus` (and `/focus clear`), `/refresh`, `/reset`, `/full`, `/export [md|json]`, `/undo`, and `/help` (static, no model call). Typing `/` shows an inline completion hint of available commands. One shared router parses bar input for both the bar itself and `/thread <text>` preload — there is no duplicated parsing.
+- Simplified `/thread`: it now only handles extension mechanics — `/thread` (open, create if absent), `/thread <text>` (open and preload `<text>` through the bar router), `/thread doctor` (unchanged), and the new `/thread config` (a Model / Effort / Done menu that replaces `/thread model` and `/thread effort`).
+- `Esc` now clears a non-empty bar draft first, then closes/cancels as before. `C`, `R`, and `L` still work as single-key shortcuts when the draft is empty.
+
+### Removed
+
+- Slash subcommands `/thread refresh`, `/thread reset`, `/thread full`, `/thread export`, `/thread steer`, `/thread edit`, `/thread focus`, `/thread undo`, `/thread model`, and `/thread effort` — this logic now lives behind the shared bar router, reachable from the modal's input bar or via `/thread <text>`.
+
+### Notes
+
+- Stored thread settings (`settings.model` / `settings.effort`) keep the same on-disk shape; `/thread config` reads and writes them exactly as `/thread model`/`/thread effort` did.
+
 ## [0.1.0] - 2026-09-14
 
 Initial release.

@@ -499,50 +499,64 @@ export async function updateThreadSettings(
 	return next;
 }
 
-export type ThreadCommand =
-	| { action: "open" | "refresh" | "reset" | "full" | "undo" | "doctor" }
-	| { action: "ask"; question: string }
+/** Content-operation commands parsed from the modal input bar. Ask has no prefix; everything else is `/word [argument]`. */
+export type BarCommand =
+	| { action: "ask"; question: string; includeLatest?: boolean }
 	| { action: "edit"; instruction: string }
-	| { action: "focus-show" | "focus-clear" }
-	| { action: "focus-set"; instruction: string }
-	| { action: "export"; format: "md" | "json" }
-	| { action: "model-show" | "effort-show" }
-	| { action: "model-set"; model: string }
-	| { action: "effort-set"; effort: ThreadEffort }
-	| { action: "steer"; intent: string };
+	| { action: "steer"; intent: string }
+	| { action: "focus"; instruction: string }
+	| { action: "focus-clear" }
+	| { action: "refresh" }
+	| { action: "reset" }
+	| { action: "full" }
+	| { action: "undo" }
+	| { action: "help" }
+	| { action: "export"; format: "md" | "json" };
+
+/** Bar commands with a `/` prefix, in the order shown by the inline completion hint and `/help`. */
+export const BAR_COMMANDS = ["edit", "steer", "focus", "refresh", "reset", "full", "export", "undo", "help"] as const;
+
+export function parseBarCommand(input: string): BarCommand {
+	const value = input.trim();
+	if (!value.startsWith("/")) return { action: "ask", question: value };
+	const [word, ...rest] = value.slice(1).split(/\s+/);
+	const argument = rest.join(" ").trim();
+	if (word === "refresh" || word === "reset" || word === "full" || word === "undo" || word === "help") {
+		if (argument) throw new Error(`Usage: /${word}`);
+		return { action: word };
+	}
+	if (word === "export") {
+		if (!argument) return { action: "export", format: "md" };
+		if (argument === "md" || argument === "json") return { action: "export", format: argument };
+		throw new Error("Usage: /export [md|json]");
+	}
+	if (word === "edit") {
+		if (!argument) throw new Error("Usage: /edit <instruction>");
+		return { action: "edit", instruction: argument };
+	}
+	if (word === "steer") {
+		if (!argument) throw new Error("Usage: /steer <intent>");
+		return { action: "steer", intent: argument };
+	}
+	if (word === "focus") {
+		if (argument === "clear") return { action: "focus-clear" };
+		if (!argument) throw new Error("Usage: /focus <instruction>|clear");
+		return { action: "focus", instruction: argument };
+	}
+	throw new Error(`Unknown bar command: /${word ?? ""}. Type / for a list, or /help.`);
+}
+
+/** Mechanics commands handled by the `/thread` slash command itself. */
+export type ThreadCommand =
+	| { action: "open" }
+	| { action: "doctor" }
+	| { action: "config" }
+	| { action: "bar"; command: BarCommand };
 
 export function parseThreadCommand(input: string): ThreadCommand {
 	const value = input.trim();
 	if (!value) return { action: "open" };
 	const [word, ...rest] = value.split(/\s+/);
-	const argument = rest.join(" ").trim();
-	if (["refresh", "reset", "full", "undo", "doctor"].includes(word!)) {
-		if (argument) throw new Error(`Usage: /thread ${word}`);
-		return { action: word as "refresh" | "reset" | "full" | "undo" | "doctor" };
-	}
-	if (word === "model") return argument ? { action: "model-set", model: argument } : { action: "model-show" };
-	if (word === "effort") {
-		if (!argument) return { action: "effort-show" };
-		if (!(THREAD_EFFORTS as readonly string[]).includes(argument)) throw new Error("Usage: /thread effort [default|low|medium|high]");
-		return { action: "effort-set", effort: argument as ThreadEffort };
-	}
-	if (word === "edit") {
-		if (!argument) throw new Error("Usage: /thread edit <instruction>");
-		return { action: "edit", instruction: argument };
-	}
-	if (word === "focus") {
-		if (!argument) return { action: "focus-show" };
-		if (argument === "clear") return { action: "focus-clear" };
-		return { action: "focus-set", instruction: argument };
-	}
-	if (word === "export") {
-		if (!argument) return { action: "export", format: "md" };
-		if (argument === "md" || argument === "json") return { action: "export", format: argument };
-		throw new Error("Usage: /thread export [md|json]");
-	}
-	if (word === "steer") {
-		if (!argument) throw new Error("Usage: /thread steer <intent>");
-		return { action: "steer", intent: argument };
-	}
-	return { action: "ask", question: value };
+	if ((word === "doctor" || word === "config") && rest.length === 0) return { action: word };
+	return { action: "bar", command: parseBarCommand(value) };
 }

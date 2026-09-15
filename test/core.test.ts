@@ -11,6 +11,7 @@ import {
 	formatInferencePrompt,
 	formatHeader,
 	latestCompletedAssistantText,
+	parseBarCommand,
 	parseThreadCommand,
 	parseMemoryDocument,
 	regenerateMemory,
@@ -267,20 +268,36 @@ test("mutation queue runs operations one at a time in submission order", async (
 	assert.deepEqual(events, ["first:start", "first:end", "second"]);
 });
 
-test("reserved thread commands are routed deterministically and other text is Ask", () => {
+test("/thread mechanics (open, doctor, config) are routed deterministically; everything else goes to the bar router", () => {
 	assert.deepEqual(parseThreadCommand(""), { action: "open" });
-	assert.deepEqual(parseThreadCommand("refresh"), { action: "refresh" });
-	assert.deepEqual(parseThreadCommand("export"), { action: "export", format: "md" });
-	assert.deepEqual(parseThreadCommand("export json"), { action: "export", format: "json" });
-	assert.deepEqual(parseThreadCommand("focus clear"), { action: "focus-clear" });
 	assert.deepEqual(parseThreadCommand("doctor"), { action: "doctor" });
-	assert.deepEqual(parseThreadCommand("model gemini-3.7-flash"), { action: "model-set", model: "gemini-3.7-flash" });
-	assert.deepEqual(parseThreadCommand("effort high"), { action: "effort-set", effort: "high" });
-	assert.deepEqual(parseThreadCommand("effort default"), { action: "effort-set", effort: "default" });
-	assert.deepEqual(parseThreadCommand("edit correct this"), { action: "edit", instruction: "correct this" });
-	assert.deepEqual(parseThreadCommand("What changed?"), { action: "ask", question: "What changed?" });
-	assert.throws(() => parseThreadCommand("refresh extra"), /Usage/);
-	assert.throws(() => parseThreadCommand("effort extreme"), /Usage/);
+	assert.deepEqual(parseThreadCommand("config"), { action: "config" });
+	assert.deepEqual(parseThreadCommand("What changed?"), { action: "bar", command: { action: "ask", question: "What changed?" } });
+	assert.deepEqual(parseThreadCommand("/edit correct this"), { action: "bar", command: { action: "edit", instruction: "correct this" } });
+	// "doctor"/"config" only short-circuit as bare words; with arguments they fall through to the bar router as Ask text.
+	assert.deepEqual(parseThreadCommand("doctor now"), { action: "bar", command: { action: "ask", question: "doctor now" } });
+});
+
+test("bar commands parse all '/'-prefixed content operations; unprefixed text is Ask; unknown commands throw", () => {
+	assert.deepEqual(parseBarCommand(""), { action: "ask", question: "" });
+	assert.deepEqual(parseBarCommand("What changed?"), { action: "ask", question: "What changed?" });
+	assert.deepEqual(parseBarCommand("/edit correct this"), { action: "edit", instruction: "correct this" });
+	assert.deepEqual(parseBarCommand("/steer ship it"), { action: "steer", intent: "ship it" });
+	assert.deepEqual(parseBarCommand("/focus emphasize tests"), { action: "focus", instruction: "emphasize tests" });
+	assert.deepEqual(parseBarCommand("/focus clear"), { action: "focus-clear" });
+	assert.deepEqual(parseBarCommand("/refresh"), { action: "refresh" });
+	assert.deepEqual(parseBarCommand("/reset"), { action: "reset" });
+	assert.deepEqual(parseBarCommand("/full"), { action: "full" });
+	assert.deepEqual(parseBarCommand("/undo"), { action: "undo" });
+	assert.deepEqual(parseBarCommand("/help"), { action: "help" });
+	assert.deepEqual(parseBarCommand("/export"), { action: "export", format: "md" });
+	assert.deepEqual(parseBarCommand("/export json"), { action: "export", format: "json" });
+	assert.throws(() => parseBarCommand("/export xml"), /Usage: \/export/);
+	assert.throws(() => parseBarCommand("/edit"), /Usage: \/edit/);
+	assert.throws(() => parseBarCommand("/steer"), /Usage: \/steer/);
+	assert.throws(() => parseBarCommand("/focus"), /Usage: \/focus/);
+	assert.throws(() => parseBarCommand("/refresh extra"), /Usage: \/refresh/);
+	assert.throws(() => parseBarCommand("/foo"), /Unknown bar command: \/foo/);
 });
 
 test("source budget reserves room for prior memory and rejects an oversized saved document", () => {
