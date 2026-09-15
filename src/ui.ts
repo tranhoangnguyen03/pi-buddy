@@ -108,8 +108,7 @@ export class ThreadModal implements Focusable {
 	private notice = "";
 	private retryable = false;
 	private disposed = false;
-	private expandedLatest = false;
-	private jumpToLatest = false;
+	private includeLatest = false;
 
 	constructor(
 		tui: TuiLike,
@@ -158,8 +157,6 @@ export class ThreadModal implements Focusable {
 		this.result = result;
 		this.retryable = retryable;
 		this.notice = notice;
-		this.expandedLatest = false;
-		this.jumpToLatest = false;
 		if (!result.full) this.activeView = "summary";
 		this.offsets = { summary: 0, full: 0 };
 		this.updateMarkdown();
@@ -179,9 +176,7 @@ export class ThreadModal implements Focusable {
 		const text = this.activeView === "full" && this.result.full ? this.result.full : this.result.summary;
 		if (!this.result.latestRequested) return text;
 		if (!this.result.latestResponse) return `${text}\n\n---\n\n_No completed Pi response was available._`;
-		return this.expandedLatest
-			? `${text}\n\n---\n\n## Latest Pi response\n\n${this.result.latestResponse}`
-			: `${text}\n\n---\n\n_Latest Pi response hidden — press L to expand._`;
+		return `${text}\n\n---\n\n## Latest Pi response\n\n${this.result.latestResponse}`;
 	}
 
 	private updateMarkdown(): void {
@@ -218,8 +213,6 @@ export class ThreadModal implements Focusable {
 		this.kind = "result";
 		this.result = { summary: this.helpText };
 		this.retryable = false;
-		this.expandedLatest = false;
-		this.jumpToLatest = false;
 		this.activeView = "summary";
 		this.offsets = { summary: 0, full: 0 };
 		this.notice = "";
@@ -238,6 +231,7 @@ export class ThreadModal implements Focusable {
 			this.tui.requestRender();
 			return;
 		}
+		if (command.action === "ask") command.includeLatest = this.includeLatest;
 		this.runPreset(command);
 	}
 
@@ -252,7 +246,7 @@ export class ThreadModal implements Focusable {
 		if (this.kind === "loading") return "Esc cancel";
 		if (this.kind === "streaming") return "Working… · ↑/↓/PgUp/PgDn scroll · Esc cancel";
 		if (this.kind === "error") return "R try again · Esc close";
-		return `↑/↓/PgUp/PgDn scroll · Tab summary/full · C copy${this.result?.latestResponse ? " · L latest" : ""}${this.retryable ? ` · R ${this.retryLabel}` : ""} · Esc clear/close`;
+		return `↑/↓/PgUp/PgDn scroll · Tab summary/full · C copy${this.retryable ? ` · R ${this.retryLabel}` : ""} · L latest ${this.includeLatest ? "on" : "off"} · Esc clear/close`;
 	}
 
 	private frameLine(content: string, innerWidth: number): string {
@@ -289,11 +283,6 @@ export class ThreadModal implements Focusable {
 		this.bodyHeight = Math.max(1, dialogHeight - 9);
 		const rendered = this.markdown.render(innerWidth);
 		this.maxOffset = Math.max(0, rendered.length - this.bodyHeight);
-		if (this.jumpToLatest) {
-			const latestLine = rendered.findIndex((line) => line.includes("Latest Pi response"));
-			if (latestLine >= 0) this.offsets[this.activeView] = Math.min(latestLine, this.maxOffset);
-			this.jumpToLatest = false;
-		}
 		this.offsets[this.activeView] = Math.max(0, Math.min(this.offsets[this.activeView], this.maxOffset));
 		const offset = this.offsets[this.activeView];
 		const hiddenBelow = Math.max(0, this.maxOffset - offset);
@@ -369,10 +358,10 @@ export class ThreadModal implements Focusable {
 				return;
 			}
 			if ((matchesKey(data, "r") || matchesKey(data, "shift+r")) && this.retryable) return this.onRetry();
-			if ((matchesKey(data, "l") || matchesKey(data, "shift+l")) && this.kind === "result" && this.result?.latestResponse) {
-				this.expandedLatest = !this.expandedLatest;
-				this.jumpToLatest = this.expandedLatest;
-				this.updateMarkdown();
+			if ((matchesKey(data, "l") || matchesKey(data, "shift+l"))) {
+				this.includeLatest = !this.includeLatest;
+				this.notice = "";
+				this.tui.requestRender();
 				return;
 			}
 		}

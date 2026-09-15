@@ -501,7 +501,7 @@ export async function updateThreadSettings(
 
 /** Content-operation commands parsed from the modal input bar. Ask has no prefix; everything else is `/word [argument]`. */
 export type BarCommand =
-	| { action: "ask"; question: string }
+	| { action: "ask"; question: string; includeLatest?: boolean }
 	| { action: "edit"; instruction: string }
 	| { action: "steer"; intent: string }
 	| { action: "focus"; instruction: string }

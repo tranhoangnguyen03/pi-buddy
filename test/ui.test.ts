@@ -67,7 +67,7 @@ test("arrows, PageUp/PageDown, raw wheel, and normalized trackpad wheel scroll t
 	assert.equal(wheelDelta("\x1b[<65;1;1M"), 3);
 });
 
-test("C copies only the displayed view, L expands latest inline, and Esc clears the draft before closing", async () => {
+test("C copies only the displayed view, L toggles include-latest for Ask, and Esc clears the draft before closing", async () => {
 	const copied: string[] = [];
 	let closed = 0;
 	const { component } = modal({ copy: async (text) => { copied.push(text); }, close: () => { closed++; } });
@@ -75,16 +75,15 @@ test("C copies only the displayed view, L expands latest inline, and Esc clears 
 	component.handleInput("c");
 	await tick();
 	assert.match(copied[0]!, /summary view/);
-	assert.doesNotMatch(copied[0]!, /latest response/);
+	assert.match(copied[0]!, /latest response/);
 	component.handleInput("l");
-	assert.match(component.render(80).join("\n"), /latest response/);
-	component.handleInput("c");
-	await tick();
-	assert.match(copied[1]!, /latest response/);
+	assert.match(component.render(80).join("\n"), /L latest on/);
+	component.handleInput("l");
+	assert.match(component.render(80).join("\n"), /L latest off/);
 	component.handleInput("\t");
 	component.handleInput("c");
 	await tick();
-	assert.match(copied[2]!, /full view/);
+	assert.match(copied[1]!, /full view/);
 	type(component, "draft text");
 	component.handleInput("\x1b");
 	assert.equal(closed, 0);
@@ -102,6 +101,19 @@ test("single-letter shortcuts type into a non-empty draft instead of firing copy
 	assert.equal(copied.length, 0);
 	assert.equal(retries, 0);
 	assert.match(component.render(80).join("\n"), /> xcr/);
+});
+
+test("Ask submission attaches the include-latest toggle and defaults off", () => {
+	const submitted: unknown[] = [];
+	const { component } = modal({ onBarSubmit: (command) => submitted.push(command) });
+	component.setResult({ summary: "view" }, false);
+	type(component, "why did we do this?");
+	component.handleInput("\n");
+	assert.deepEqual(submitted, [{ action: "ask", question: "why did we do this?", includeLatest: false }]);
+	component.handleInput("l");
+	type(component, "again?");
+	component.handleInput("\n");
+	assert.deepEqual(submitted[1], { action: "ask", question: "again?", includeLatest: true });
 });
 
 test("bar input routes /full and /help locally without reaching the bar-submit callback", () => {

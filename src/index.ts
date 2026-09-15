@@ -164,7 +164,7 @@ export default function threadMemoryExtension(pi: ExtensionAPI) {
 			if (command.action === "ask") {
 				const captured = state!;
 				const question = command.question;
-				const latest = latestCompletedAssistantText(ctx.sessionManager.getBranch());
+				const latest = command.includeLatest ? latestCompletedAssistantText(ctx.sessionManager.getBranch()) : null;
 				const settings = threadSettings(captured);
 				let status: BackendStatus = { backend: "Agy", model: settings.model, effort: settings.effort };
 				return {
@@ -173,7 +173,7 @@ export default function threadMemoryExtension(pi: ExtensionAPI) {
 						const answer = await askMemory(captured, question, latest, infer, signal);
 						return {
 							kind: "display",
-							result: textResult(`## Question\n\n${question}\n\n## Answer\n\n${answer}`, status, { latestRequested: true, latestResponse: latest }),
+							result: textResult(`## Question\n\n${question}\n\n## Answer\n\n${answer}`, status, { latestRequested: command.includeLatest === true, latestResponse: latest }),
 							retryable: true,
 						};
 					},
