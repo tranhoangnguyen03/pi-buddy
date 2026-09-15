@@ -18,28 +18,38 @@ pi -e ./src/index.ts
 
 ## Use
 
+`/thread` is the only slash command; it only handles extension mechanics:
+
 ```text
-/thread                         open saved summary; create it if absent
-/thread refresh                 rebuild from compatible prior memory + current lineage
-/thread reset                   confirmed rebuild from current lineage only
-/thread full                    show the complete memory
-/thread <question>              ask saved memory, optionally with latest Pi response
-/thread edit <instruction>      revise memory with natural language
-/thread undo                    undo the last memory edit once
-/thread focus [instruction]     show or set next-rebuild focus
-/thread focus clear             clear focus
-/thread export [md|json]        export into the current working directory
-/thread steer <intent>          show a copyable prompt; never send it
-/thread model [id]              show or set this thread's Agy model
-/thread effort [default|low|medium|high] show or set this thread's reasoning effort (`default` is for fixed-effort models)
-/thread doctor                  check Agy and Pi fallback readiness
+/thread                open saved memory; create it if absent
+/thread <text>         open (creating if absent), then run <text> as if typed into the bar below
+/thread doctor         check Agy and Pi fallback readiness
+/thread config         choose the thread's Agy model or reasoning effort
 ```
+
+Everything else — memory *content* — happens through the input bar pinned at the bottom of the modal. Type a question and press Enter to Ask the saved memory (the default mode); `/`-prefixed bar commands do everything else:
+
+```text
+<question>                     ask saved memory, streamed into the modal body
+/edit <instruction>            revise memory with natural language (one-step /undo)
+/steer <intent>                draft a copyable prompt for Pi; C copies, nothing is sent automatically
+/focus <instruction>           set guidance for the next refresh or reset
+/focus clear                   clear focus
+/refresh                       rebuild from compatible prior memory + current lineage
+/reset                         confirmed rebuild from current lineage only
+/full                          switch to the Full tab
+/export [md|json]              export into the current working directory
+/undo                          undo the last memory edit once
+/help                          static help: bar commands, keys, and content vs. mechanics
+```
+
+Typing `/` at the start of the bar shows an inline hint of the available commands, narrowed as you keep typing. Bar commands are parsed deterministically by one router shared between the bar and `/thread <text>`; unrecognized `/word` input shows an error without leaving the current view.
 
 Generation, editing, Ask, and Steer use Agy independently of Pi's selected model and authentication. The per-thread defaults match Bro: `gemini-3.7-flash` with `low` effort. Agy runs in a temporary sandbox directory with slash commands disabled; prompts use NDJSON on stdin, responses stream into the same modal, and structured memory output is hidden until it validates. Escape cancels the child process.
 
-Only a spawn `ENOENT` (Agy is absent from `PATH`) falls back once to an isolated request through Pi's selected model. An explicit thread effort is passed to Pi; `default` inherits Pi's current thinking setting (or low if unavailable). Authentication, quota, model, timeout, cancellation, process, and malformed-output failures stay visible and never trigger fallback. A persistent footer notice identifies an ENOENT fallback; install/sign in to Agy and use `/thread doctor`, `/thread model`, and `/thread effort` to resolve it. The extension never installs Agy or edits global Pi configuration.
+Only a spawn `ENOENT` (Agy is absent from `PATH`) falls back once to an isolated request through Pi's selected model. An explicit thread effort is passed to Pi; `default` inherits Pi's current thinking setting (or low if unavailable). Authentication, quota, model, timeout, cancellation, process, and malformed-output failures stay visible and never trigger fallback. A persistent footer notice identifies an ENOENT fallback; install/sign in to Agy and use `/thread doctor` and `/thread config` to resolve it. The extension never installs Agy or edits global Pi configuration.
 
-The modal keeps loading, streaming, result, and error states in one overlay. Summary and Full are instant local tabs (`Tab`/`Shift+Tab`) with independent scroll positions. Use arrows, Page Up/Down, mouse wheel, or trackpad to scroll; `C` copies only the displayed view, `R` retries the same captured inputs, `L` expands a captured latest Pi response when Ask included one, and `Esc` closes or cancels. Steer never copies automatically.
+The modal keeps loading, streaming, result, and error states in one overlay, with the bar always pinned at the bottom. Summary and Full are instant local tabs (`Tab`/`Shift+Tab`, or `/full`) with independent scroll positions. Use arrows, Page Up/Down, mouse wheel, or trackpad to scroll; with an empty draft, `C` copies only the displayed view, `R` retries the same captured bar command, and `L` expands a captured latest Pi response when Ask included one. `Esc` clears a non-empty draft first, then closes or cancels. Steer never copies automatically.
 
 Memory-changing operations run one at a time, validate the whole returned JSON document, and atomically replace the previous file only after success. A failed retry keeps the previous successful result visible.
 

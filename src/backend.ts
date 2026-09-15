@@ -57,7 +57,7 @@ export interface BackendStatus {
 	notice?: string;
 }
 
-export const AGY_UNAVAILABLE_NOTICE = "Agy is not installed or not on PATH. Install and sign in to Agy; check /thread doctor, /thread model, and /thread effort. This request used isolated Pi fallback.";
+export const AGY_UNAVAILABLE_NOTICE = "Agy is not installed or not on PATH. Install and sign in to Agy; check /thread doctor and /thread config. This request used isolated Pi fallback.";
 
 export class AgyUnavailableError extends Error {
 	constructor(message = "Agy executable was not found") {

@@ -12,6 +12,17 @@ test("extension registers only the deterministic thread command", () => {
 	assert.equal(typeof (commands[0]?.options as { handler?: unknown }).handler, "function");
 });
 
+test("/thread argument completions only offer mechanics (doctor, config), not the removed content subcommands", () => {
+	const commands: Array<{ name: string; options: { getArgumentCompletions?: (prefix: string) => Array<{ value: string }> | null } }> = [];
+	extension({ registerCommand: (name: string, options: unknown) => commands.push({ name, options: options as never }) } as never);
+	const completions = commands[0]!.options.getArgumentCompletions!;
+	assert.deepEqual(completions("")?.map((item) => item.value).sort(), ["config", "doctor"]);
+	assert.deepEqual(completions("c")?.map((item) => item.value), ["config"]);
+	assert.equal(completions("refresh"), null);
+	assert.equal(completions("model"), null);
+	assert.equal(completions("effort"), null);
+});
+
 test("result and retry compare the captured head with the leaf at render time", async () => {
 	const state: StoredState = {
 		schemaVersion: 1,
